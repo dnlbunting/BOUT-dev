@@ -301,7 +301,7 @@ const Field3D Grad_par_LtoC(const Field3D &var) {
   Coordinates *metric = mesh->coordinates();
 
   if (var.hasYupYdown()) {
-    for (auto &i : result.region(RGN_NOBNDRY)) {
+    for (const auto &i : result.region(RGN_NOBNDRY)) {
       result[i] = (var.yup()[i.yp()] - var[i]) / (metric->dy[i]*sqrt(metric->g_22[i]));
     }
   } else {
@@ -309,7 +309,7 @@ const Field3D Grad_par_LtoC(const Field3D &var) {
 
     Field3D var_fa = mesh->toFieldAligned(var);
 
-    for(auto &i : result.region(RGN_NOBNDRY)) {
+    for(const auto &i : result.region(RGN_NOBNDRY)) {
       result[i] = (var_fa[i.yp()] - var_fa[i]) / (metric->dy[i]*sqrt(metric->g_22[i]));
     }
     result = mesh->fromFieldAligned(result);

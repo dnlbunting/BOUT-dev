@@ -10,7 +10,7 @@ using a single loop:
 ::
 
     Field3D f(0.0);
-    for (auto i : f) {
+    for (const auto& i : f) {
        f[i] = a[i] + b[i];
     }
 
@@ -32,7 +32,7 @@ The iterator provides access to the x, y, z indices:
 ::
 
     Field3D f(0.0);
-    for (auto i : f) {
+    for (const auto& i : f) {
        f[i] = i.x + i.y + i.z;
     }
 
@@ -42,7 +42,7 @@ syntax:
 ::
 
     Field3D f(0.0);
-    for (auto i : f.region(RGN_NOBNDRY)) {
+    for (const auto& i : f.region(RGN_NOBNDRY)) {
        f[i] = 1.0;
     }
 

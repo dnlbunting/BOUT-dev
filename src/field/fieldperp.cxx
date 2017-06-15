@@ -174,7 +174,7 @@ void FieldPerp::setZStencil(stencil &fval, const bindex &bx, CELL_LOC UNUSED(loc
     int y = lhs.getIndex();            		                          \
     result.setIndex(y);                                                   \
                                                                           \
-    for(auto i : result)                                                  \
+    for(const auto& i : result)                                                  \
       result[i] = lhs[i] op rhs[i];                                       \
                                                                           \
     return result;                                                        \
@@ -205,7 +205,7 @@ FPERP_FPERP_OP_FIELD(/, Field2D);
     int y = lhs.getIndex();                                               \
     result.setIndex(y);                                                   \
                                                                           \
-    for(auto i : result)                                                  \
+    for(const auto& i : result)                                                  \
       result[i] = lhs[i] op rhs;                                          \
                                                                           \
     return result;                                                        \
@@ -224,7 +224,7 @@ FPERP_FPERP_OP_REAL(/);
     int y = rhs.getIndex();                                               \
     result.setIndex(y);                                                   \
                                                                           \
-    for(auto i : result)                                                  \
+    for(const auto& i : result)                                                  \
       result[i] = lhs op rhs[i];                                          \
                                                                           \
     return result;                                                        \
@@ -250,7 +250,7 @@ const FieldPerp sliceXZ(const Field3D& f, int y) {
   result.allocate();
   result.setIndex(y);
 
-  for(auto i : result)
+  for(const auto& i : result)
     result[i] = f[i];
   
   return result;
