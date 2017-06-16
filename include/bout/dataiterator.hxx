@@ -247,10 +247,14 @@ private:
   /// Advance to the next index
   void next() {
     ++z;
-    if(z > zmax) {
+    if(z <= zmax) {
+      return;
+    } else {
       z = zmin;
       ++y;
-      if(y > ymax) {
+      if(y <= ymax) {
+	return;
+      } else {
 	y = ymin;
 	++x;
       }
@@ -260,10 +264,14 @@ private:
   /// Rewind to the previous index
   void prev() {
     --z;
-    if(z < zmin) {
+    if(z >= zmin) {
+      return;
+    } else {
       z = zmax;
       --y;
-      if(y < ymin) {
+      if(y >= ymin) {
+	return;
+      } else {
 	y = ymax;
 	--x;
       }
