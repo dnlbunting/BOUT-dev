@@ -44,7 +44,7 @@ for t in tests:
     os.chdir(t)
 
     # Run test, piping stdout so it is not sent to console
-    status,out = shell("./runtest", pipe=True)
+    status,out = shell("./runtest")
 
     if status != 0:
         print("F", end='') # No newline

@@ -20,5 +20,6 @@ export PYTHONPATH=$(pwd)/tools/pylib/:$PYTHONPATH
 export MAKEFLAGS="-j 2 -k"
 time make || exit
 time make check-unit-tests || exit
+echo "Using nthreads = ${OMP_NUM_THREADS}"
 time make check-integrated-tests || exit
 time make check-mms-tests || exit
