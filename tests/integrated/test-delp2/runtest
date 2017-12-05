@@ -13,7 +13,7 @@ import numpy as np
 from sys import stdout, exit
 
 MPIRUN=getmpirun()
-MPIRUN+=" --mca mpi_yield_when_idle 1 " #Force passive/yield_when_idle mode in case of oversubscription
+MPIRUN="mpirun --mca mpi_yield_when_idle 1 -np " #Force passive/yield_when_idle mode in case of oversubscription
 print("Making Delp2 operator test")
 shell("make > make.log")
 
@@ -32,7 +32,7 @@ for i, opts in enumerate(settings):
   print("Args: " + opts)
   cmd = "time -p "+exefile + " " + opts
   
-  s, out = launch(cmd, runcmd=MPIRUN, nproc=1, pipe=True, time=False)
+  s, out = launch(cmd, runcmd=MPIRUN, nproc=1, pipe=True, time=False, verbose=True)
   timings.append("\n".join(out.splitlines()[-3:])+"\n")
   with open("run.log."+str(i)+".1", "w") as f:
     f.write(out)
