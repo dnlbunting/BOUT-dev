@@ -35,7 +35,7 @@ npassed = 0
 nfailed = 0
 total = len(tests)
 failed = []
-
+outputs = []
 start_time = time.time()
 
 print("======= Starting integrated tests ========")
@@ -44,7 +44,7 @@ for t in tests:
     os.chdir(t)
 
     # Run test, piping stdout so it is not sent to console
-    status,out = shell("./runtest")
+    status,out = shell("time -p ./runtest", pipe=True)
 
     if status != 0:
         print("F", end='') # No newline
@@ -54,12 +54,18 @@ for t in tests:
         # Passed
         print(".", end='') # No newline
         npassed = npassed + 1
+        outputs.append((t,out))
     sys.stdout.flush() # Make sure '.' or 'F' is flushed
     os.chdir(savepath)
 
 elapsed_time = time.time() - start_time
 
 print("\n")
+
+print("======= TIMING ========")
+for test, output in outputs :
+    # Note: need Unicode string in case output contains unicode
+    print(u"\n----- {0} -----\n{1}".format(test, "\n".join(output.splitlines()[-3:])))
 
 if nfailed > 0:
     print("======= FAILURES ========")
