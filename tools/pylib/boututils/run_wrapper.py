@@ -164,7 +164,7 @@ def  determineNumberOfCPUs():
     raise Exception('Can not determine number of CPUs on this system')
 
 
-def launch(command, runcmd="mpirun -np", nproc=None, output=None, pipe=False, verbose=False):
+def launch(command, runcmd="mpirun -np", nproc=None, output=None, pipe=False, verbose=False, time=True):
     """Launch parallel MPI jobs
 
     status = launch(command, nproc, output=None)
@@ -184,6 +184,9 @@ def launch(command, runcmd="mpirun -np", nproc=None, output=None, pipe=False, ve
     if output is not None:
         cmd = cmd + " > "+output
 
+    if time:
+        cmd = "time "+cmd
+        
     if verbose == True:
          print(cmd)
 
