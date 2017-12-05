@@ -26,13 +26,14 @@ settings = ["mxg=2 mesh:nx=36",
 
 
 success = True
-
+timings=[]
 for i, opts in enumerate(settings):
   # Read benchmark values
   print("Args: " + opts)
-  cmd = exefile + " " + opts
+  cmd = "time -p "+exefile + " " + opts
   
-  s, out = launch(cmd, runcmd=MPIRUN, nproc=1, pipe=True)
+  s, out = launch(cmd, runcmd=MPIRUN, nproc=1, pipe=True, time=False)
+  timings.append("\n".join(out.splitlines()[-3:])+"\n")
   with open("run.log."+str(i)+".1", "w") as f:
     f.write(out)
 
@@ -42,7 +43,8 @@ for i, opts in enumerate(settings):
     shell("rm data/BOUT.dmp.*.nc")
     
     stdout.write("   %d processor...." % (nproc))
-    s, out = launch(cmd, runcmd=MPIRUN, nproc=nproc, pipe=True)
+    s, out = launch(cmd, runcmd=MPIRUN, nproc=nproc, pipe=True, time=False)
+    timings.append("\n".join(out.splitlines()[-3:])+"\n")
     with open("run.log."+str(i)+"."+str(nproc), "w") as f:
       f.write(out)
 
@@ -60,6 +62,9 @@ for i, opts in enumerate(settings):
 
 if success:
   print(" => All Delp2 tests passed")
+  print("\n")
+  print("\n".join(timings))
+  print(20*"-"+"\n")
   exit(0)
 else:
   print(" => Some failed tests")

@@ -44,7 +44,7 @@ for t in tests:
     os.chdir(t)
 
     # Run test, piping stdout so it is not sent to console
-    status,out = shell("time -p ./runtest", pipe=True)
+    status,out = shell("time -p ./runtest")
 
     if status != 0:
         print("F", end='') # No newline
@@ -62,10 +62,10 @@ elapsed_time = time.time() - start_time
 
 print("\n")
 
-print("======= TIMING ========")
-for test, output in outputs :
-    # Note: need Unicode string in case output contains unicode
-    print(u"\n----- {0} -----\n{1}".format(test, "\n".join(output.splitlines()[-3:])))
+# print("======= TIMING ========")
+# for test, output in outputs :
+#     # Note: need Unicode string in case output contains unicode
+#     print(u"\n----- {0} -----\n{1}".format(test, "\n".join(output.splitlines()[-3:])))
 
 if nfailed > 0:
     print("======= FAILURES ========")
