@@ -11,6 +11,7 @@
 #include <iterator>
 #include <output.hxx>
 #include <vector>
+#include <utility>
 
 #ifdef _OPENMP
 #include <omp.h>
@@ -98,6 +99,14 @@ struct SIndices {
 
 /// Region for the SingleDataIterator to iterate over
 typedef std::vector<int> RegionIndices;
+
+
+typedef std::pair<int, int> contiguousBlock;
+typedef std::vector<contiguousBlock> contiguousBlocks;
+
+#ifndef MAXREGIONBLOCKSIZE
+#define MAXREGIONBLOCKSIZE 64
+#endif
 
 /// Provides range-based iteration over indices.
 /// If OpenMP is enabled, then this divides work between threads.
@@ -324,6 +333,38 @@ public:
     std::advance(iter.region_iter, iter.icountend);
     return iter;
   }
+
+  /* 
+   * Returns a vector of all contiguous blocks contained in the passed region.
+   * Limits the maximum size of any contiguous block to maxBlockSize.
+   * A contiguous block is described by the inclusive start and the exclusive end
+   * of the contiguous block.
+   */
+  contiguousBlocks getContiguousBlocks() const{
+    const int lastPoint = region.size();
+    contiguousBlocks result;
+    int index = 0;
+    
+    while (index < lastPoint){
+      const int startIndex = index;
+      int count = 1; //We will always have at least startPair in the block so count starts at 1
+      
+      //Consider if the next point should be added to this block
+      for(index++; count<MAXREGIONBLOCKSIZE; index++){
+	if((region[index]-region[index-1])==1){
+	  count++;
+	}else{//Reached the end of this block so break
+	  break;
+	}
+      }
+      
+      //Add pair to output, denotes inclusive start and exclusive end
+      result.push_back({startIndex, index});
+    }
+    
+    return result;
+  }
+
 };
 
 /// Helper function to create a RegionIndices, given the start and end
@@ -358,5 +399,6 @@ inline RegionIndices createRegionIndices(int xstart, int xend, int ystart, int y
   }
   return region;
 }
+
 
 #endif // __SINGLEDATAITERATOR_H__

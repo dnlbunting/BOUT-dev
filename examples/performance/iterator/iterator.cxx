@@ -250,6 +250,25 @@ int main(int argc, char **argv) {
   ASSERT0(fabs(result(2, 2, 2) - 3.0) < tolerance);
   result = 0.0;
 
+  // SingleDataIterator range-based with contiguous blocks
+  
+  //Not including this in the timing as we would ideally precalculate this in initialisation
+  const auto blocks = result.sdi_region(RGN_ALL).getContiguousBlocks();
+	
+  SteadyClock start11 = steady_clock::now();
+  for (int x = 0; x < NUM_LOOPS; ++x) {
+#pragma omp parallel for
+    for (auto block = blocks.begin(); block<blocks.end(); ++block ) {
+      for (int index = (*block).first; index != (*block).second; ++index){
+	result[index] = a[index] + b[index];
+      }
+    }
+  }
+  Duration elapsed11 = steady_clock::now() - start11;
+
+  ASSERT0(fabs(result(2, 2, 2) - 3.0) < tolerance);
+  result = 0.0;
+
   ConditionalOutput time_output(Output::getInstance());
   time_output.enable(true);
 
@@ -266,6 +285,7 @@ int main(int argc, char **argv) {
   time_output << "Single index (range-based) : " << elapsed8.count() / NUM_LOOPS << std::endl;
   time_output << "C++11 Range-based for      : " << elapsed9.count() / NUM_LOOPS << std::endl;
   time_output << "DataIterator (done)        : " << elapsed10.count() / NUM_LOOPS << std::endl;
+  time_output << "Single with contiguous     : " << elapsed11.count() / NUM_LOOPS << std::endl;
 
   BoutFinalise();
   return 0;

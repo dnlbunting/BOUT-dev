@@ -318,6 +318,8 @@ class Field3D : public Field, public FieldData {
   const IndexRange region(REGION rgn) const;
   const SIndexRange sdi_region(REGION rgn) const;
 
+  BoutReal& operator[](const int i) { return data[i];}
+  const BoutReal& operator[](const int i) const { return data[i];}
   /*!
    * Direct data access using DataIterator object.
    * This uses operator(x,y,z) so checks will only be
