@@ -1,0 +1,20 @@
+
+NOUT = 0
+TIMESTEP = 0.2
+
+[mesh]
+MXG=0
+MYG=0
+
+length = 1  # Length of the domain
+
+nx = 1
+ny = 1
+nz = 1
+
+dx = length / (nx - 4)
+dy = 1
+
+[contig]
+maxBlockSize=4
+numLoops=100
