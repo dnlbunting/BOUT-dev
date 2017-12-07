@@ -277,6 +277,7 @@ int main(int argc, char **argv) {
   ConditionalOutput time_output(Output::getInstance());
   time_output.enable(true);
   if(timingOutput){
+    time_output << mesh->GlobalNx * mesh->GlobalNy * mesh->GlobalNz << " ";
     time_output << mesh->GlobalNx << " ";
     time_output << mesh->GlobalNy << " ";
     time_output << mesh->GlobalNz << " ";
