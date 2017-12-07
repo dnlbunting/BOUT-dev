@@ -17,6 +17,49 @@
 #include <omp.h>
 int SDI_spread_work(int num_work, int thread, int max_thread);
 #endif
+  
+#ifndef MAXREGIONBLOCKSIZE
+#define MAXREGIONBLOCKSIZE 64
+#endif
+
+/// Region for the SingleDataIterator to iterate over
+typedef std::vector<int> RegionIndices;
+
+typedef std::pair<int, int> contiguousBlock;
+typedef std::vector<contiguousBlock> contiguousBlocks;
+
+/// Helper function to create a RegionIndices, given the start and end
+/// points in x, y, z, and the total y, z lengths
+inline RegionIndices createRegionIndices(int xstart, int xend, int ystart, int yend,
+                                         int zstart, int zend, int ny, int nz) {
+
+  int len = (xend - xstart + 1) * (yend - ystart + 1) * (zend - zstart + 1);
+  RegionIndices region(len);
+  int j = 0;
+  int x = xstart;
+  int y = ystart;
+  int z = zstart;
+
+  bool done = false;
+  j = -1;
+  while (!done) {
+    j++;
+    region[j] = (x * ny + y) * nz + z;
+    if (x == xend && y == yend && z == zend) {
+      done = true;
+    }
+    ++z;
+    if (z > zend) {
+      z = zstart;
+      ++y;
+      if (y > yend) {
+        y = ystart;
+        ++x;
+      }
+    }
+  }
+  return region;
+}
 
 /*!
  * Set of indices - SingleDataIterator is dereferenced into these
@@ -97,16 +140,56 @@ struct SIndices {
 };
 
 
-/// Region for the SingleDataIterator to iterate over
-typedef std::vector<int> RegionIndices;
+class Region {
+public:
+  RegionIndices indices;
+  contiguousBlocks blocks;
 
+  Region(int xstart, int xend, int ystart, int yend,
+	 int zstart, int zend, int ny, int nz){
+    indices = createRegionIndices(xstart, xend, ystart, yend, zstart, zend, ny, nz);
+    blocks  = getContiguousBlocks();
+  };
+  Region(RegionIndices& indices) : indices(indices){
+    blocks = getContiguousBlocks();
+  }
+  //Want to make this private to disable but think it may be needed as we put Regions into
+  //maps which seems to need to be able to make "empty" objects.
+  Region(){};
 
-typedef std::pair<int, int> contiguousBlock;
-typedef std::vector<contiguousBlock> contiguousBlocks;
+  /* 
+   * Returns a vector of all contiguous blocks contained in the passed region.
+   * Limits the maximum size of any contiguous block to maxBlockSize.
+   * A contiguous block is described by the inclusive start and the exclusive end
+   * of the contiguous block.
+   */
+  contiguousBlocks getContiguousBlocks() const{
+    const int lastPoint = indices.size();
+    contiguousBlocks result;
+    int index = 0;
+    
+    while (index < lastPoint){
+      const int startIndex = index;
+      int count = 1; //We will always have at least startPair in the block so count starts at 1
+      
+      //Consider if the next point should be added to this block
+      for(index++; count<MAXREGIONBLOCKSIZE; index++){
+	if((indices[index]-indices[index-1])==1){
+	  count++;
+	}else{//Reached the end of this block so break
+	  break;
+	}
+      }
+      
+      //Add pair to output, denotes inclusive start and exclusive end
+      result.push_back({startIndex, index});
+    }
+    
+    return result;
+  }
+private:
 
-#ifndef MAXREGIONBLOCKSIZE
-#define MAXREGIONBLOCKSIZE 64
-#endif
+};
 
 /// Provides range-based iteration over indices.
 /// If OpenMP is enabled, then this divides work between threads.
@@ -308,18 +391,18 @@ inline void SingleDataIterator::omp_init() {
  */
 class SIndexRange {
 public:
-  SIndexRange(int nx, int ny, int nz, RegionIndices &region)
+  SIndexRange(int nx, int ny, int nz, Region &region)
       : nx(nx), ny(ny), nz(nz), region(region) {}
 
   int nx, ny, nz;
-  RegionIndices &region;
+  Region &region;
 
   /*!
    * Resets DataIterator to the start of the range
    */
   SingleDataIterator begin() const {
-    SingleDataIterator iter{nx, ny, nz, region};
-    iter.region_iter = region.cbegin();
+    SingleDataIterator iter{nx, ny, nz, region.indices};
+    iter.region_iter = region.indices.cbegin();
     std::advance(iter.region_iter, iter.icountstart);
     return iter;
   }
@@ -328,8 +411,8 @@ public:
    * Sets DataIterator to one index past the end of the range
    */
   SingleDataIterator end() const {
-    SingleDataIterator iter{nx, ny, nz, region};
-    iter.region_iter = region.cbegin();
+    SingleDataIterator iter{nx, ny, nz, region.indices};
+    iter.region_iter = region.indices.cbegin();
     std::advance(iter.region_iter, iter.icountend);
     return iter;
   }
@@ -341,64 +424,9 @@ public:
    * of the contiguous block.
    */
   contiguousBlocks getContiguousBlocks() const{
-    const int lastPoint = region.size();
-    contiguousBlocks result;
-    int index = 0;
-    
-    while (index < lastPoint){
-      const int startIndex = index;
-      int count = 1; //We will always have at least startPair in the block so count starts at 1
-      
-      //Consider if the next point should be added to this block
-      for(index++; count<MAXREGIONBLOCKSIZE; index++){
-	if((region[index]-region[index-1])==1){
-	  count++;
-	}else{//Reached the end of this block so break
-	  break;
-	}
-      }
-      
-      //Add pair to output, denotes inclusive start and exclusive end
-      result.push_back({startIndex, index});
-    }
-    
-    return result;
+    return region.blocks;
   }
 
 };
-
-/// Helper function to create a RegionIndices, given the start and end
-/// points in x, y, z, and the total y, z lengths
-inline RegionIndices createRegionIndices(int xstart, int xend, int ystart, int yend,
-                                         int zstart, int zend, int ny, int nz) {
-
-  int len = (xend - xstart + 1) * (yend - ystart + 1) * (zend - zstart + 1);
-  RegionIndices region(len);
-  int j = 0;
-  int x = xstart;
-  int y = ystart;
-  int z = zstart;
-
-  bool done = false;
-  j = -1;
-  while (!done) {
-    j++;
-    region[j] = (x * ny + y) * nz + z;
-    if (x == xend && y == yend && z == zend) {
-      done = true;
-    }
-    ++z;
-    if (z > zend) {
-      z = zstart;
-      ++y;
-      if (y > yend) {
-        y = ystart;
-        ++x;
-      }
-    }
-  }
-  return region;
-}
-
 
 #endif // __SINGLEDATAITERATOR_H__

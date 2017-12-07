@@ -257,9 +257,9 @@ int main(int argc, char **argv) {
 
   // SingleDataIterator range-based with contiguous blocks
   
-  //Not including this in the timing as we would ideally precalculate this in initialisation
-  const auto blocks = result.sdi_region(RGN_ALL).getContiguousBlocks();
-	
+  //Not including this in the timing as we precalculate this in initialisation
+  const auto blocks = mesh->getRegion("RGN_ALL").blocks;
+  
   SteadyClock start11 = steady_clock::now();
   for (int x = 0; x < NUM_LOOPS; ++x) {
 #pragma omp parallel for

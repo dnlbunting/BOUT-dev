@@ -599,12 +599,12 @@ class Mesh {
   /// Get the named region from the region_map for the data iterator
   ///
   /// Throws if region_name not found
-  RegionIndices &getRegion(const std::string &region_name);
+  Region &getRegion(const std::string &region_name);
 
   /// Add a new region to the region_map for the data iterator
   ///
   /// Outputs an error message if region_name already exists
-  void addRegion(const std::string &region_name, RegionIndices region);
+  void addRegion(const std::string &region_name, Region region);
 
   /// Create the default regions for the data iterator
   ///
@@ -615,7 +615,7 @@ class Mesh {
   ///
   /// Needs start/end indices for x, y, z, and total size in y, z (not
   /// needed for x)
-  RegionIndices makeSingleIndexRegion(int xstart, int xend, int ystart, int yend,
+  Region makeSingleIndexRegion(int xstart, int xend, int ystart, int yend,
                                       int zstart, int zend) const;
 
 protected:
@@ -627,7 +627,7 @@ protected:
   Options *options; ///< Mesh options section
   
   /// Named regions for the data iterator
-  std::map<std::string, RegionIndices> region_map;
+  std::map<std::string, Region> region_map;
 
   /*!
    * Return the parallel transform, setting it if need be

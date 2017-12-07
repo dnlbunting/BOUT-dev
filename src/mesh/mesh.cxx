@@ -323,7 +323,7 @@ Coordinates *Mesh::createDefaultCoordinates() {
   return new Coordinates(this);
 }
 
-RegionIndices &Mesh::getRegion(const std::string &region_name) {
+Region &Mesh::getRegion(const std::string &region_name) {
   auto found = region_map.find(region_name);
   if (found == end(region_map)) {
     throw BoutException("Couldn't find region %s", region_name.c_str());
@@ -331,7 +331,7 @@ RegionIndices &Mesh::getRegion(const std::string &region_name) {
   return found->second;
 }
 
-void Mesh::addRegion(const std::string &region_name, RegionIndices region) {
+void Mesh::addRegion(const std::string &region_name, Region region) {
   if (region_map.count(region_name)) {
     output_error << "ERROR: Trying to add an already existing region: " << region_name << "\n";
     return;
@@ -339,9 +339,9 @@ void Mesh::addRegion(const std::string &region_name, RegionIndices region) {
   region_map[region_name] = region;
 }
 
-RegionIndices Mesh::makeSingleIndexRegion(int xstart, int xend, int ystart, int yend,
+Region Mesh::makeSingleIndexRegion(int xstart, int xend, int ystart, int yend,
                                           int zstart, int zend) const {
-  return createRegionIndices(xstart, xend, ystart, yend, zstart, zend, LocalNy, LocalNz);
+  return Region(xstart, xend, ystart, yend, zstart, zend, LocalNy, LocalNz);
 }
 
 void Mesh::createDefaultRegions() {
