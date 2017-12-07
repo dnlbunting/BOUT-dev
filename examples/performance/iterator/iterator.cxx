@@ -93,7 +93,12 @@ int main(int argc, char **argv) {
   BoutReal *bd = &b(0, 0, 0);
   BoutReal *rd = &result(0, 0, 0);
 
-  const int NUM_LOOPS = 100;
+  int NUM_LOOPS;
+  bool timingOutput;
+  Options *globalOptions = Options::getRoot();
+  Options *modelOpts=globalOptions->getSection("iterator");
+  OPTION(modelOpts, NUM_LOOPS, 100);
+  OPTION(modelOpts, timingOutput, false);
 
   // Loop over data so first test doesn't have a disadvantage from caching
   for (int i = 0; i < NUM_LOOPS; ++i) {
@@ -103,7 +108,7 @@ int main(int argc, char **argv) {
     }
   }
 
-  ASSERT0(fabs(rd[4] - 3.0) < tolerance);
+  ASSERT0(fabs(max(result - 3.0, true)) < tolerance);
   result = 0.0;
 
   SteadyClock start1 = steady_clock::now();
@@ -116,7 +121,7 @@ int main(int argc, char **argv) {
   }
   Duration elapsed1 = steady_clock::now() - start1;
 
-  ASSERT0(fabs(rd[4] - 3.0) < tolerance);
+  ASSERT0(fabs(max(result - 3.0,true)) < tolerance);
   result = 0.0;
 
   // Nested loops over block data
@@ -133,7 +138,7 @@ int main(int argc, char **argv) {
   }
   Duration elapsed2 = steady_clock::now() - start2;
 
-  ASSERT0(fabs(result(2, 2, 2) - 3.0) < tolerance);
+  ASSERT0(fabs(max(result - 3.0,true)) < tolerance);
   result = 0.0;
 
   // MeshIterator over block data
@@ -145,7 +150,7 @@ int main(int argc, char **argv) {
   }
   Duration elapsed3 = steady_clock::now() - start3;
 
-  ASSERT0(fabs(result(2, 2, 2) - 3.0) < tolerance);
+  ASSERT0(fabs(max(result - 3.0,true)) < tolerance);
   result = 0.0;
 
   // DataIterator using begin(), end()
@@ -160,7 +165,7 @@ int main(int argc, char **argv) {
   }
   Duration elapsed4 = steady_clock::now() - start4;
 
-  ASSERT0(fabs(result(2, 2, 2) - 3.0) < tolerance);
+  ASSERT0(fabs(max(result - 3.0,true)) < tolerance);
   result = 0.0;
 
   // DataIterator with done()
@@ -175,7 +180,7 @@ int main(int argc, char **argv) {
   }
   Duration elapsed5 = steady_clock::now() - start5;
 
-  ASSERT0(fabs(result(2, 2, 2) - 3.0) < tolerance);
+  ASSERT0(fabs(max(result - 3.0,true)) < tolerance);
   result = 0.0;
 
   // Range based for DataIterator with indices
@@ -188,7 +193,7 @@ int main(int argc, char **argv) {
   }
   Duration elapsed6 = steady_clock::now() - start6;
 
-  ASSERT0(fabs(result(2, 2, 2) - 3.0) < tolerance);
+  ASSERT0(fabs(max(result - 3.0,true)) < tolerance);
   result = 0.0;
 
   // SingleDataIterator
@@ -206,7 +211,7 @@ int main(int argc, char **argv) {
   }
   Duration elapsed7 = steady_clock::now() - start7;
 
-  ASSERT0(fabs(result(2, 2, 2) - 3.0) < tolerance);
+  ASSERT0(fabs(max(result - 3.0,true)) < tolerance);
   result = 0.0;
 
   // SingleDataIterator range-based
@@ -222,7 +227,7 @@ int main(int argc, char **argv) {
   }
   Duration elapsed8 = steady_clock::now() - start8;
 
-  ASSERT0(fabs(result(2, 2, 2) - 3.0) < tolerance);
+  ASSERT0(fabs(max(result - 3.0,true)) < tolerance);
   result = 0.0;
 
   // Range based DataIterator
@@ -234,7 +239,7 @@ int main(int argc, char **argv) {
   }
   Duration elapsed9 = steady_clock::now() - start9;
 
-  ASSERT0(fabs(result(2, 2, 2) - 3.0) < tolerance);
+  ASSERT0(fabs(max(result - 3.0,true)) < tolerance);
   result = 0.0;
 
   // DataIterator over fields
@@ -247,7 +252,7 @@ int main(int argc, char **argv) {
   }
   Duration elapsed10 = steady_clock::now() - start10;
 
-  ASSERT0(fabs(result(2, 2, 2) - 3.0) < tolerance);
+  ASSERT0(fabs(max(result - 3.0,true)) < tolerance);
   result = 0.0;
 
   // SingleDataIterator range-based with contiguous blocks
@@ -266,27 +271,50 @@ int main(int argc, char **argv) {
   }
   Duration elapsed11 = steady_clock::now() - start11;
 
-  ASSERT0(fabs(result(2, 2, 2) - 3.0) < tolerance);
+  ASSERT0(fabs(max(result - 3.0,true)) < tolerance);
   result = 0.0;
 
   ConditionalOutput time_output(Output::getInstance());
   time_output.enable(true);
-
-  time_output << "TIMING\n======\n";
-  time_output << "C loop                     : " << elapsed1.count() / NUM_LOOPS << std::endl;
-  time_output << "----- (x,y,z) indexing ----" << std::endl;
-  time_output << "Nested loops               : " << elapsed2.count() / NUM_LOOPS << std::endl;
-  time_output << "MeshIterator               : " << elapsed3.count() / NUM_LOOPS << std::endl;
-  time_output << "DataIterator (begin/end)   : " << elapsed4.count() / NUM_LOOPS << std::endl;
-  time_output << "DataIterator (begin/done)  : " << elapsed5.count() / NUM_LOOPS << std::endl;
-  time_output << "C++11 range-based for      : " << elapsed6.count() / NUM_LOOPS << std::endl;
-  time_output << "------ [i] indexing -------" << std::endl;
-  time_output << "Single index               : " << elapsed7.count() / NUM_LOOPS << std::endl;
-  time_output << "Single index (range-based) : " << elapsed8.count() / NUM_LOOPS << std::endl;
-  time_output << "C++11 Range-based for      : " << elapsed9.count() / NUM_LOOPS << std::endl;
-  time_output << "DataIterator (done)        : " << elapsed10.count() / NUM_LOOPS << std::endl;
-  time_output << "Single with contiguous     : " << elapsed11.count() / NUM_LOOPS << std::endl;
-
+  if(timingOutput){
+    time_output << mesh->GlobalNx << " ";
+    time_output << mesh->GlobalNy << " ";
+    time_output << mesh->GlobalNz << " ";
+    time_output << BoutComm::size() << " ";
+#ifdef _OPENMP    
+    time_output << omp_get_max_threads()  << " ";
+#else
+    time_output << 0  << " ";
+#endif    
+    time_output << NUM_LOOPS << " ";
+    time_output << elapsed1.count() / NUM_LOOPS << " ";
+    time_output << elapsed2.count() / NUM_LOOPS << " ";
+    time_output << elapsed3.count() / NUM_LOOPS << " ";
+    time_output << elapsed4.count() / NUM_LOOPS << " ";
+    time_output << elapsed5.count() / NUM_LOOPS << " ";
+    time_output << elapsed6.count() / NUM_LOOPS << " ";
+    time_output << elapsed7.count() / NUM_LOOPS << " ";
+    time_output << elapsed8.count() / NUM_LOOPS << " ";
+    time_output << elapsed9.count() / NUM_LOOPS << " ";
+    time_output << elapsed10.count() / NUM_LOOPS << " ";
+    time_output << elapsed11.count() / NUM_LOOPS << " ";
+    time_output << "\n";
+  }else{
+    time_output << "TIMING\n======\n";
+    time_output << "C loop                     : " << elapsed1.count() / NUM_LOOPS << std::endl;
+    time_output << "----- (x,y,z) indexing ----" << std::endl;
+    time_output << "Nested loops               : " << elapsed2.count() / NUM_LOOPS << std::endl;
+    time_output << "MeshIterator               : " << elapsed3.count() / NUM_LOOPS << std::endl;
+    time_output << "DataIterator (begin/end)   : " << elapsed4.count() / NUM_LOOPS << std::endl;
+    time_output << "DataIterator (begin/done)  : " << elapsed5.count() / NUM_LOOPS << std::endl;
+    time_output << "C++11 range-based for      : " << elapsed6.count() / NUM_LOOPS << std::endl;
+    time_output << "------ [i] indexing -------" << std::endl;
+    time_output << "Single index               : " << elapsed7.count() / NUM_LOOPS << std::endl;
+    time_output << "Single index (range-based) : " << elapsed8.count() / NUM_LOOPS << std::endl;
+    time_output << "C++11 Range-based for      : " << elapsed9.count() / NUM_LOOPS << std::endl;
+    time_output << "DataIterator (done)        : " << elapsed10.count() / NUM_LOOPS << std::endl;
+    time_output << "Single with contiguous     : " << elapsed11.count() / NUM_LOOPS << std::endl;
+  }
   BoutFinalise();
   return 0;
 }

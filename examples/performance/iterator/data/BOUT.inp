@@ -1,7 +1,10 @@
-
-MZ = 128
-
 [mesh]
 nx = 100
 ny = 100
+nz = 128
+MXG=0
+MYG=0
 
+[iterator]
+NUM_LOOPS = 100
+timingOutput = true
