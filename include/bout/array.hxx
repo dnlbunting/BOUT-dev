@@ -36,6 +36,10 @@
 #ifdef BOUT_ARRAY_WITH_VALARRAY
 #include <valarray>
 #endif
+
+#include <bout/openmpwrap.hxx>
+
+
 /*!
  * Data array type with automatic memory management
  *
@@ -92,7 +96,7 @@ public:
    * Copy constructor
    */
   Array(const Array &other) {
-    ptr = other.ptr; 
+    ptr = other.ptr;
   }
 
   /*!
