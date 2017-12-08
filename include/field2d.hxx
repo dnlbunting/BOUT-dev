@@ -159,6 +159,11 @@ class Field2D : public Field, public FieldData {
     return operator()(d.x, d.y);
   }
 
+  int convert3Dto2D(int i);
+  const int convert3Dto2D(int i) const; 
+  inline BoutReal& operator[](int i) { return data[convert3Dto2D(i)];}
+  inline const BoutReal& operator[](const int i) const { return data[convert3Dto2D(i)];}
+  
   /// Indices are also used as a lightweight way to specify indexing
   /// for example DataIterator offsets (xp, xm, yp etc.) return Indices
   inline BoutReal& operator[](const Indices &i) {

@@ -140,6 +140,9 @@ const DataIterator Field2D::end() const {
                       0, 0, DI_GET_END);
 }
 
+int Field2D::convert3Dto2D(int i){ return i / getMesh()->LocalNz;};
+const int Field2D::convert3Dto2D(int i) const{ return i / getMesh()->LocalNz;};
+
 const IndexRange Field2D::region(REGION rgn) const {
   switch(rgn) {
   case RGN_ALL: {
