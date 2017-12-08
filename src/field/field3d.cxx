@@ -42,7 +42,7 @@
 #include <msg_stack.hxx>
 #include <bout/constants.hxx>
 #include <bout/assert.hxx>
-
+#include <bout/openmpwrap.hxx>
 /// Constructor
 Field3D::Field3D(Mesh *localmesh)
     : Field(localmesh), background(nullptr), deriv(nullptr), yup_field(nullptr),
@@ -353,8 +353,7 @@ Field3D & Field3D::operator=(const Field2D &rhs) {
   allocate();
 
   /// Copy data
-  for(const auto& i : (*this))
-    (*this)[i] = rhs[i];
+  BLOCK_REGION_LOOP("RGN_ALL",i,(*this)[i] = rhs[i];);
   
   /// Only 3D fields have locations for now
   //location = CELL_CENTRE;
@@ -396,8 +395,7 @@ Field3D & Field3D::operator=(const BoutReal val) {
   if(!finite(val))
     throw BoutException("Field3D: Assignment from non-finite BoutReal\n");
 #endif
-  for(const auto& i : (*this))
-    (*this)[i] = val;
+  BLOCK_REGION_LOOP("RGN_ALL",i,(*this)[i] = val;);
 
   // Only 3D fields have locations
   //location = CELL_CENTRE;
@@ -415,8 +413,7 @@ Field3D & Field3D::operator=(const BoutReal val) {
     checkData(*this);                                        \
     if(data.unique()) {                                      \
       /* This is the only reference to this data */          \
-      for(const auto& i : (*this))                                  \
-        (*this)[i] op rhs[i];                                \
+      BLOCK_REGION_LOOP("RGN_ALL",i,(*this)[i] op rhs[i];);  \
     }else {                                                  \
       /* Shared data */                                      \
       (*this) = (*this) bop rhs;                             \
@@ -443,8 +440,7 @@ F3D_UPDATE_FIELD(/=, /, Field2D);    // operator/= Field2D
                                                              \
     if(data.unique()) {                                      \
       /* This is the only reference to this data */          \
-      for(const auto& i : (*this))                                  \
-        (*this)[i] op rhs;                                   \
+      BLOCK_REGION_LOOP("RGN_ALL",i,(*this)[i] op rhs;);     \
     }else {                                                  \
       /* Need to put result in a new block */                \
       (*this) = (*this) bop rhs;                             \
@@ -848,19 +844,28 @@ F3D_OP_FPERP(-);
 F3D_OP_FPERP(/);
 F3D_OP_FPERP(*);
 
+// #define F3D_OP_FIELD(op, ftype)                                     \
+//   Field3D operator op(const Field3D &lhs, const ftype &rhs) { \
+//     Field3D result;                                                 \
+//     result.allocate();                                              \
+//     const auto blocks = mesh->getRegion("RGN_ALL").blocks;	    \
+// BOUT_OMP(parallel for)					    \
+//  for(auto block = blocks.begin(); block < blocks.end(); ++block){\
+//    for(int i = (*block).first; i<(*block).second; ++i){		    \
+//       result[i] = lhs[i] op rhs[i];                                 \
+//     }                                                               \
+//  }								    \
+//     result.setLocation( lhs.getLocation() );                        \
+//     return result;                                                  \
+//   }
+
 #define F3D_OP_FIELD(op, ftype)                                     \
   Field3D operator op(const Field3D &lhs, const ftype &rhs) { \
     Field3D result;                                                 \
     result.allocate();                                              \
-    _Pragma("omp parallel")                                         \
-    {                                                               \
-      auto end = result.sdi_region(RGN_ALL).end();                        \
-      for(auto i = result.sdi_region(RGN_ALL).begin(); i != end; ++i){ \
-      result(*i) = lhs(*i) op rhs(*i);                                 \
-    }                                                               \
-    }                                                               \
-    result.setLocation( lhs.getLocation() );                        \
-    return result;                                                  \
+    BLOCK_REGION_LOOP("RGN_ALL",i,result[i] = lhs[i] op rhs[i];);    \
+    result.setLocation( lhs.getLocation() );			     \
+    return result;						     \
   }
 
 F3D_OP_FIELD(+, Field3D);   // Field3D + Field3D
@@ -877,14 +882,8 @@ F3D_OP_FIELD(/, Field2D);   // Field3D / Field2D
 #define F3D_OP_REAL(op)                                         \
   Field3D operator op(const Field3D &lhs, BoutReal rhs) { \
     Field3D result;                                             \
-    result.allocate();                                          \
-    _Pragma("omp parallel")                                     \
-    {                                                           \
-      auto end = result.sdi_region(RGN_ALL).end();                        \
-      for(auto i = result.sdi_region(RGN_ALL).begin(); i != end; ++i){ \
-        result(*i) = lhs(*i) op rhs;                              \
-      }                                                         \
-    }                                                           \
+    result.allocate();						\
+    BLOCK_REGION_LOOP("RGN_ALL",i,result[i] = lhs[i] op rhs;);	\
     result.setLocation( lhs.getLocation() );                    \
     return result;                                              \
   }
@@ -898,9 +897,8 @@ F3D_OP_REAL(/); // Field3D / BoutReal
   Field3D operator op(BoutReal lhs, const Field3D &rhs) {                                \
     Field3D result;                                                                      \
     result.allocate();                                                                   \
-    for (const auto &i : rhs)                                                            \
-      result[i] = lhs op rhs[i];                                                         \
-    result.setLocation(rhs.getLocation());                                               \
+    BLOCK_REGION_LOOP("RGN_ALL",i,result[i] = lhs op rhs[i];);\
+    result.setLocation(rhs.getLocation());				\
     return result;                                                                       \
   }
 
@@ -924,10 +922,10 @@ Field3D pow(const Field3D &lhs, const Field3D &rhs) {
   result.allocate();
 
   // Iterate over indices
-  for(const auto& i : result) {
-    result[i] = ::pow(lhs[i], rhs[i]);
-    ASSERT2( ::finite( result[i] ) );
-  }
+  BLOCK_REGION_LOOP("RGN_ALL",i,
+		    result[i] = ::pow(lhs[i], rhs[i]);
+		    ASSERT2( ::finite( result[i] ));
+		    );
   
   result.setLocation( lhs.getLocation() );
   
@@ -946,10 +944,10 @@ Field3D pow(const Field3D &lhs, const Field2D &rhs) {
   result.allocate();
 
   // Iterate over indices
-  for(const auto& i : result) {
-    result[i] = ::pow(lhs[i], rhs[i]);
-    ASSERT3( ::finite( result[i] ) );
-  }
+  BLOCK_REGION_LOOP("RGN_ALL",i,    
+		    result[i] = ::pow(lhs[i], rhs[i]);
+		    ASSERT3( ::finite( result[i] ) );
+		    );
 
   result.setLocation( lhs.getLocation() );
   
@@ -967,7 +965,7 @@ Field3D pow(const Field3D &lhs, const FieldPerp &rhs) {
   for(const auto& i : result) {
     result[i] = ::pow(lhs[i], rhs[i]);
     ASSERT2( ::finite( result[i] ) );
-  }
+  };
 
   result.setLocation( lhs.getLocation() );
   return result;
@@ -980,10 +978,10 @@ Field3D pow(const Field3D &lhs, BoutReal rhs) {
 
   Field3D result(lhs.getMesh());
   result.allocate();
-  for(const auto& i : result){
-    result[i] = ::pow(lhs[i], rhs);
-    ASSERT3(finite(result[i]));
-  }
+  BLOCK_REGION_LOOP("RGN_ALL",i,        
+		    result[i] = ::pow(lhs[i], rhs);
+		    ASSERT3(finite(result[i]));
+		    );
   
   result.setLocation( lhs.getLocation() );
   return result;
@@ -998,10 +996,10 @@ Field3D pow(BoutReal lhs, const Field3D &rhs) {
   Field3D result(rhs.getMesh());
   result.allocate();
 
-  for(const auto& i : result){
-    result[i] = ::pow(lhs, rhs[i]);
-    ASSERT3(finite(result[i]));
-  }
+  BLOCK_REGION_LOOP("RGN_ALL",i,            
+		    result[i] = ::pow(lhs, rhs[i]);
+		    ASSERT3(finite(result[i]));
+		    );
   
   result.setLocation( rhs.getLocation() );
   return result;
@@ -1014,10 +1012,10 @@ BoutReal min(const Field3D &f, bool allpe) {
 
   BoutReal result = f[f.region(RGN_NOBNDRY).begin()];
   
-  for(const auto& i: f.region(RGN_NOBNDRY))
-    if(f[i] < result)
-      result = f[i];
-  
+  BLOCK_REGION_LOOP("RGN_NOBNDRY",i,                
+		    if(f[i] < result)
+		      result = f[i];
+		    );
   if(allpe) {
     // MPI reduce
     BoutReal localresult = result;
@@ -1034,10 +1032,10 @@ BoutReal max(const Field3D &f, bool allpe) {
   
   BoutReal result = f[f.region(RGN_NOBNDRY).begin()];
   
-  for(const auto& i: f.region(RGN_NOBNDRY))
-    if(f[i] > result)
-      result = f[i];
-  
+  BLOCK_REGION_LOOP("RGN_NOBNDRY",i,                
+		    if(f[i] > result)
+		      result = f[i];
+		    );
   if(allpe) {
     // MPI reduce
     BoutReal localresult = result;
@@ -1059,11 +1057,11 @@ BoutReal max(const Field3D &f, bool allpe) {
     Field3D result(f.getMesh());                                                         \
     result.allocate();                                                                   \
     /* Loop over domain */                                                               \
-    for (const auto &d : result) {                                                       \
-      result[d] = func(f[d]);                                                            \
+    BLOCK_REGION_LOOP("RGN_ALL",d,\
+      result[d] = func(f[d]);						\
       /* If checking is set to 3 or higher, test result */                               \
       ASSERT3(finite(result[d]));                                                        \
-    }                                                                                    \
+    );									\
     result.setLocation(f.getLocation());                                                 \
     return result;                                                                       \
   }
@@ -1273,10 +1271,10 @@ const Field3D copy(const Field3D &f) {
 const Field3D floor(const Field3D &var, BoutReal f) {
   Field3D result = copy(var);
   
-  for(const auto& d : result)
-    if(result[d] < f)
-      result[d] = f;
-  
+  BLOCK_REGION_LOOP("RGN_ALL",d,
+		    if(result[d] < f)
+		      result[d] = f;
+		    );
   return result;
 }
 
