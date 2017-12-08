@@ -28,13 +28,22 @@ typedef std::vector<int> RegionIndices;
 typedef std::pair<int, int> contiguousBlock;
 typedef std::vector<contiguousBlock> contiguousBlocks;
 
+
+#define BLOCK_REGION_LOOP_SERIAL(regionStr, index, ...)			\
+  {const auto blocks = mesh->getRegion(regionStr).blocks;		\
+  for(auto block = blocks.begin(); block < blocks.end() ; ++block){ \
+  for(int index = (*block).first ; index <= (*block).second; ++index){ \
+  __VA_ARGS__ \
+    }}}
+
 #define BLOCK_REGION_LOOP(regionStr, index, ...)			\
   {const auto blocks = mesh->getRegion(regionStr).blocks;		\
   BOUT_OMP(parallel for) \
   for(auto block = blocks.begin(); block < blocks.end() ; ++block){ \
-  for(int index = (*block).first ; index < (*block).second; ++index){ \
+  for(int index = (*block).first ; index <= (*block).second; ++index){ \
   __VA_ARGS__ \
     }}}
+
 /// Helper function to create a RegionIndices, given the start and end
 /// points in x, y, z, and the total y, z lengths
 inline RegionIndices createRegionIndices(int xstart, int xend, int ystart, int yend,
@@ -176,7 +185,7 @@ public:
     int index = 0;
     
     while (index < lastPoint){
-      const int startIndex = index;
+      const int startIndex = indices[index];
       int count = 1; //We will always have at least startPair in the block so count starts at 1
       
       //Consider if the next point should be added to this block
@@ -189,7 +198,7 @@ public:
       }
       
       //Add pair to output, denotes inclusive start and exclusive end
-      result.push_back({startIndex, index});
+      result.push_back({startIndex, indices[index-1]});
     }
     
     return result;

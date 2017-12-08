@@ -26,6 +26,8 @@ protected:
     }
     mesh = new FakeMesh(nx, ny, nz);
 
+    mesh->createDefaultRegions();
+    
     mesh->addBoundary(new BoundaryRegionXIn("core", 1, ny - 2));
     mesh->addBoundary(new BoundaryRegionXOut("sol", 1, ny - 2));
     mesh->addBoundary(new BoundaryRegionYUp("upper_target", 1, nx - 2));

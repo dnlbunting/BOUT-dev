@@ -1011,11 +1011,11 @@ BoutReal min(const Field3D &f, bool allpe) {
   ASSERT2(f.isAllocated());
 
   BoutReal result = f[f.region(RGN_NOBNDRY).begin()];
-  
-  BLOCK_REGION_LOOP("RGN_NOBNDRY",i,                
-		    if(f[i] < result)
-		      result = f[i];
-		    );
+
+  BLOCK_REGION_LOOP_SERIAL("RGN_NOBNDRY",i,
+  		    if(f[i] < result)
+  		      result = f[i];
+  		    );
   if(allpe) {
     // MPI reduce
     BoutReal localresult = result;
@@ -1032,10 +1032,10 @@ BoutReal max(const Field3D &f, bool allpe) {
   
   BoutReal result = f[f.region(RGN_NOBNDRY).begin()];
   
-  BLOCK_REGION_LOOP("RGN_NOBNDRY",i,                
-		    if(f[i] > result)
-		      result = f[i];
-		    );
+  BLOCK_REGION_LOOP_SERIAL("RGN_NOBNDRY",i,                
+  		    if(f[i] > result)
+  		      result = f[i];
+  		    );
   if(allpe) {
     // MPI reduce
     BoutReal localresult = result;
