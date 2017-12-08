@@ -22,7 +22,7 @@ TEST_F(MeshTest, MakeSingleIndexRegion) {
       0, testmesh.LocalNx - 1, 0, testmesh.LocalNy - 1, 0, testmesh.LocalNz - 1);
   auto total_size = nx * ny * nz;
 
-  EXPECT_EQ(region_all.size(), total_size);
+  EXPECT_EQ(region_all.indices.size(), total_size);
 }
 
 TEST_F(MeshTest, AddRegion) {
@@ -44,7 +44,7 @@ TEST_F(MeshTest, GetRegion) {
 
   auto returned_region = testmesh.getRegion("test_get_region");
 
-  EXPECT_EQ(region_all.size(), returned_region.size());
+  EXPECT_EQ(region_all.indices.size(), returned_region.indices.size());
 }
 
 TEST_F(MeshTest, GetNonExistantRegion) {

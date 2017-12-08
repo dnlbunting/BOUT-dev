@@ -65,7 +65,7 @@ public:
   }
 
   /// Helper function for tests
-  std::map<std::string, RegionIndices> getRegionMap() const { return region_map; }
+  std::map<std::string, Region> getRegionMap() const { return region_map; }
 
   comm_handle send(FieldGroup &UNUSED(g)) { return nullptr; };
   int wait(comm_handle UNUSED(handle)) { return 0; }
