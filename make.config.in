@@ -139,7 +139,7 @@ exec_prefix = @exec_prefix@
 
 INSTALL = @INSTALL@
 INSTALL_PROGRAM = ${INSTALL}
-INSTALL_DATA = ${INSTALL} -m 644
+INSTALL_DATA = ${INSTALL} 
 
 INSTALL_INCLUDE_PATH = $(DESTDIR)@includedir@/bout++/
 
@@ -155,7 +155,7 @@ install: libfast
 	$(INSTALL_DATA) -d $(INSTALL_INCLUDE_PATH)/bout/invert/
 	$(INSTALL_DATA) -d $(DESTDIR)@libdir@
 	$(INSTALL_PROGRAM) -d $(DESTDIR)@bindir@
-        $(INSTALL_DATA) -d $(DESTDIR)@datadir@/bout++/
+	$(INSTALL_DATA) -d $(DESTDIR)@datadir@/bout++/
 	$(INSTALL_DATA) -d $(DESTDIR)@datadir@/bout++/idllib/
 	$(INSTALL_DATA) -d $(DESTDIR)@datadir@/bout++/pylib/boutdata/
 	$(INSTALL_DATA) -d $(DESTDIR)@datadir@/bout++/pylib/boututils/
