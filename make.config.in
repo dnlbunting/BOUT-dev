@@ -147,36 +147,48 @@ install: libfast
 	$(PRE_INSTALL)     # Pre-install commands follow.
 
 	$(NORMAL_INSTALL)  # Normal commands follow.
-
-	$(INSTALL_DATA) -D include/*.hxx -t $(INSTALL_INCLUDE_PATH)
-	$(INSTALL_DATA) -D include/pvode/*.h -t $(INSTALL_INCLUDE_PATH)/pvode/
-	$(INSTALL_DATA) -D include/bout/*.hxx -t $(INSTALL_INCLUDE_PATH)/bout/
-	$(INSTALL_DATA) -D include/bout/sys/*.hxx -t $(INSTALL_INCLUDE_PATH)/bout/sys/
-	$(INSTALL_DATA) -D include/bout/invert/*.hxx -t $(INSTALL_INCLUDE_PATH)/bout/invert/
-	$(INSTALL_DATA) -D lib/libbout++.a -t $(DESTDIR)@libdir@
-	$(INSTALL_DATA) -D lib/libpvode.a -t $(DESTDIR)@libdir@
-	$(INSTALL_DATA) -D lib/libpvpre.a -t $(DESTDIR)@libdir@
-	$(INSTALL_PROGRAM) -D bin/bout-config -t $(DESTDIR)@bindir@
-	$(INSTALL_PROGRAM) -D bin/bout-log-color -t $(DESTDIR)@bindir@
-	$(INSTALL_DATA) -D tools/idllib/*.pro -t $(DESTDIR)@datadir@/bout++/idllib/
-	$(INSTALL_DATA) -D tools/idllib/README -t $(DESTDIR)@datadir@/bout++/idllib/
-	$(INSTALL_DATA) -D tools/pylib/boutdata/*.py -t $(DESTDIR)@datadir@/bout++/pylib/boutdata/
-	$(INSTALL_DATA) -D tools/pylib/boututils/*.py -t $(DESTDIR)@datadir@/bout++/pylib/boututils/
-	$(INSTALL_DATA) -D make.config -t $(DESTDIR)@datadir@/bout++/
+	
+	$(INSTALL_DATA) -d $(INSTALL_INCLUDE_PATH)
+	$(INSTALL_DATA) -d $(INSTALL_INCLUDE_PATH)/pvode/
+	$(INSTALL_DATA) -d $(INSTALL_INCLUDE_PATH)/bout/
+	$(INSTALL_DATA) -d $(INSTALL_INCLUDE_PATH)/bout/sys/
+	$(INSTALL_DATA) -d $(INSTALL_INCLUDE_PATH)/bout/invert/
+	$(INSTALL_DATA) -d $(DESTDIR)@libdir@
+	$(INSTALL_PROGRAM) -d $(DESTDIR)@bindir@
+        $(INSTALL_DATA) -d $(DESTDIR)@datadir@/bout++/
+	$(INSTALL_DATA) -d $(DESTDIR)@datadir@/bout++/idllib/
+	$(INSTALL_DATA) -d $(DESTDIR)@datadir@/bout++/pylib/boutdata/
+	$(INSTALL_DATA) -d $(DESTDIR)@datadir@/bout++/pylib/boututils/
+	
+	$(INSTALL_DATA) include/*.hxx $(INSTALL_INCLUDE_PATH)
+	$(INSTALL_DATA) include/pvode/*.h $(INSTALL_INCLUDE_PATH)/pvode/
+	$(INSTALL_DATA) include/bout/*.hxx $(INSTALL_INCLUDE_PATH)/bout/
+	$(INSTALL_DATA) include/bout/sys/*.hxx $(INSTALL_INCLUDE_PATH)/bout/sys/
+	$(INSTALL_DATA) include/bout/invert/*.hxx $(INSTALL_INCLUDE_PATH)/bout/invert/
+	$(INSTALL_DATA) lib/libbout++.a $(DESTDIR)@libdir@
+	$(INSTALL_DATA) lib/libpvode.a $(DESTDIR)@libdir@
+	$(INSTALL_DATA) lib/libpvpre.a $(DESTDIR)@libdir@
+	$(INSTALL_PROGRAM) bin/bout-config $(DESTDIR)@bindir@
+	$(INSTALL_PROGRAM) bin/bout-log-color $(DESTDIR)@bindir@
+	$(INSTALL_DATA) tools/idllib/*.pro $(DESTDIR)@datadir@/bout++/idllib/
+	$(INSTALL_DATA) tools/idllib/README $(DESTDIR)@datadir@/bout++/idllib/
+	$(INSTALL_DATA) tools/pylib/boutdata/*.py $(DESTDIR)@datadir@/bout++/pylib/boutdata/
+	$(INSTALL_DATA) tools/pylib/boututils/*.py $(DESTDIR)@datadir@/bout++/pylib/boututils/
+	$(INSTALL_DATA) make.config $(DESTDIR)@datadir@/bout++/
 
 	$(POST_INSTALL)    # Post-install commands follow.
 
 	@# Modify paths in the bout-config script 
-	sed -i "s|^BOUT_INCLUDE_PATH=.*|BOUT_INCLUDE_PATH=@includedir@/bout++|" $(DESTDIR)@bindir@/bout-config 
-	sed -i "s|^BOUT_LIB_PATH=.*|BOUT_LIB_PATH=@libdir@|" $(DESTDIR)@bindir@/bout-config
-	sed -i "s|^BOUT_CONFIG_FILE=.*|BOUT_CONFIG_FILE=@datadir@/bout++/make.config|" $(DESTDIR)@bindir@/bout-config
-	sed -i "s|^idlpath=.*|idlpath=@datadir@/bout++/idllib/|" $(DESTDIR)@bindir@/bout-config
-	sed -i "s|^pythonpath=.*|pythonpath=@datadir@/bout++/pylib/|" $(DESTDIR)@bindir@/bout-config
+	sed -i'' "s|^BOUT_INCLUDE_PATH=.*|BOUT_INCLUDE_PATH=@includedir@/bout++|" $(DESTDIR)@bindir@/bout-config 
+	sed -i'' "s|^BOUT_LIB_PATH=.*|BOUT_LIB_PATH=@libdir@|" $(DESTDIR)@bindir@/bout-config
+	sed -i'' "s|^BOUT_CONFIG_FILE=.*|BOUT_CONFIG_FILE=@datadir@/bout++/make.config|" $(DESTDIR)@bindir@/bout-config
+	sed -i'' "s|^idlpath=.*|idlpath=@datadir@/bout++/idllib/|" $(DESTDIR)@bindir@/bout-config
+	sed -i'' "s|^pythonpath=.*|pythonpath=@datadir@/bout++/pylib/|" $(DESTDIR)@bindir@/bout-config
 
 	@# Modify paths in the make.config file
-	sed -i "s|^BOUT_INCLUDE_PATH=.*|BOUT_INCLUDE_PATH=@includedir@/bout++|" $(DESTDIR)@datadir@/bout++/make.config
-	sed -i "s|^BOUT_LIB_PATH=.*|BOUT_LIB_PATH=@libdir@|" $(DESTDIR)@datadir@/bout++/make.config
-	sed -i "s|^BOUT_CONFIG_FILE=.*|BOUT_CONFIG_FILE=@datadir@/bout++/make.config|" $(DESTDIR)@datadir@/bout++/make.config
+	sed -i'' "s|^BOUT_INCLUDE_PATH=.*|BOUT_INCLUDE_PATH=@includedir@/bout++|" $(DESTDIR)@datadir@/bout++/make.config
+	sed -i'' "s|^BOUT_LIB_PATH=.*|BOUT_LIB_PATH=@libdir@|" $(DESTDIR)@datadir@/bout++/make.config
+	sed -i'' "s|^BOUT_CONFIG_FILE=.*|BOUT_CONFIG_FILE=@datadir@/bout++/make.config|" $(DESTDIR)@datadir@/bout++/make.config
 
 uninstall:
 	$(PRE_UNINSTALL)     # Pre-uninstall commands follow.
