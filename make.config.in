@@ -179,16 +179,16 @@ install: libfast
 	$(POST_INSTALL)    # Post-install commands follow.
 
 	@# Modify paths in the bout-config script 
-	sed -i'' "s|^BOUT_INCLUDE_PATH=.*|BOUT_INCLUDE_PATH=@includedir@/bout++|" $(DESTDIR)@bindir@/bout-config 
-	sed -i'' "s|^BOUT_LIB_PATH=.*|BOUT_LIB_PATH=@libdir@|" $(DESTDIR)@bindir@/bout-config
-	sed -i'' "s|^BOUT_CONFIG_FILE=.*|BOUT_CONFIG_FILE=@datadir@/bout++/make.config|" $(DESTDIR)@bindir@/bout-config
-	sed -i'' "s|^idlpath=.*|idlpath=@datadir@/bout++/idllib/|" $(DESTDIR)@bindir@/bout-config
-	sed -i'' "s|^pythonpath=.*|pythonpath=@datadir@/bout++/pylib/|" $(DESTDIR)@bindir@/bout-config
+	sed -i'.bak' "s|^BOUT_INCLUDE_PATH=.*|BOUT_INCLUDE_PATH=@includedir@/bout++|" $(DESTDIR)@bindir@/bout-config 
+	sed -i'.bak' "s|^BOUT_LIB_PATH=.*|BOUT_LIB_PATH=@libdir@|" $(DESTDIR)@bindir@/bout-config
+	sed -i'.bak' "s|^BOUT_CONFIG_FILE=.*|BOUT_CONFIG_FILE=@datadir@/bout++/make.config|" $(DESTDIR)@bindir@/bout-config
+	sed -i'.bak' "s|^idlpath=.*|idlpath=@datadir@/bout++/idllib/|" $(DESTDIR)@bindir@/bout-config
+	sed -i'.bak' "s|^pythonpath=.*|pythonpath=@datadir@/bout++/pylib/|" $(DESTDIR)@bindir@/bout-config
 
 	@# Modify paths in the make.config file
-	sed -i'' "s|^BOUT_INCLUDE_PATH=.*|BOUT_INCLUDE_PATH=@includedir@/bout++|" $(DESTDIR)@datadir@/bout++/make.config
-	sed -i'' "s|^BOUT_LIB_PATH=.*|BOUT_LIB_PATH=@libdir@|" $(DESTDIR)@datadir@/bout++/make.config
-	sed -i'' "s|^BOUT_CONFIG_FILE=.*|BOUT_CONFIG_FILE=@datadir@/bout++/make.config|" $(DESTDIR)@datadir@/bout++/make.config
+	sed -i'.bak' "s|^BOUT_INCLUDE_PATH=.*|BOUT_INCLUDE_PATH=@includedir@/bout++|" $(DESTDIR)@datadir@/bout++/make.config
+	sed -i'.bak' "s|^BOUT_LIB_PATH=.*|BOUT_LIB_PATH=@libdir@|" $(DESTDIR)@datadir@/bout++/make.config
+	sed -i'.bak' "s|^BOUT_CONFIG_FILE=.*|BOUT_CONFIG_FILE=@datadir@/bout++/make.config|" $(DESTDIR)@datadir@/bout++/make.config
 
 uninstall:
 	$(PRE_UNINSTALL)     # Pre-uninstall commands follow.
