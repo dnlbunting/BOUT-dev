@@ -40,7 +40,7 @@ pause = False
 ###################
 
 
-def showdata(vars, titles=[], legendlabels = [], surf = [], polar = [], tslice = 0, movie = 0, intv = 1, Ncolors = 25, x = [], y = [], global_colors = False, symmetric_colors = False,hold_aspect=False):
+def showdata(vars, titles=[], interval=200, show=False, legendlabels = [], surf = [], polar = [], tslice = 0, movie = 0, intv = 1, Ncolors = 25, x = [], y = [], global_colors = False, symmetric_colors = False,hold_aspect=False):
     """
     A Function to animate time dependent data from BOUT++
     Requires numpy, mpl_toolkits, matplotlib, boutdata libaries.
@@ -311,23 +311,23 @@ def showdata(vars, titles=[], legendlabels = [], surf = [], polar = [], tslice =
     Nframes = int(Nt[0][0]/intv)
 
     # Generate grids for plotting
-    # Try to use provided grids where possible 
+    # Try to use provided grids where possible
     xnew = []
     ynew = []
     for i in range(0,Nvar):
         xnew.append([])
         try:
             xnew[i].append(x[i])
-        except:	
+        except:
             for j in range(0, Nlines[i]):
                 xnew[i].append(linspace(0,Nx[i][j]-1, Nx[i][j]))
 
         #x.append(linspace(0,Nx[i][0]-1, Nx[i][0]))
-        
+
         if (Ndims[i][0] == 3):
             try:
                 ynew.append(y[i])
-            except:        
+            except:
                 ynew.append(linspace(0, Ny[i][0]-1, Ny[i][0]))
         else:
             ynew.append(0)
@@ -547,7 +547,7 @@ def showdata(vars, titles=[], legendlabels = [], surf = [], polar = [], tslice =
                 ax[j].cla()
                 plots[j] = ax[j].contourf(theta[j], r[j], vars[j][0][index,:,:].T, levels=clevels[j])
                 ax[j].set_rmax(Nx[j][0]-1)
-            
+
         if (tslice == 0):
             title.set_text('t = %1.2e' % t[index])
         else:
@@ -568,7 +568,7 @@ def showdata(vars, titles=[], legendlabels = [], surf = [], polar = [], tslice =
     # Call Animation function
 
     fig.canvas.mpl_connect('button_press_event', onClick)
-    anim = animation.FuncAnimation(fig, animate, init_func=init, frames=Nframes)
+    anim = animation.FuncAnimation(fig, animate, init_func=init, frames=Nframes, interval=interval)
 
     # Save movie with given name
     if ((isinstance(movie,str)==1)):
@@ -586,8 +586,10 @@ def showdata(vars, titles=[], legendlabels = [], surf = [], polar = [], tslice =
                 print("Save failed: Check ffmpeg path")
 
     # Show animation
-    if (movie == 0):
+    if (movie == 0 and show):
         plt.show()
+
+    return anim
 
 
 """
