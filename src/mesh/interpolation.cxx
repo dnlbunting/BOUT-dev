@@ -1,11 +1,11 @@
 /**************************************************************************
  * Functions to interpolate between cell locations (e.g. lower Y and centred)
- * 
+ *
  **************************************************************************
  * Copyright 2010 B.D.Dudson, S.Farley, M.V.Umansky, X.Q.Xu
  *
  * Contact: Ben Dudson, bd512@york.ac.uk
- * 
+ *
  * This file is part of BOUT++.
  *
  * BOUT++ is free software: you can redistribute it and/or modify
@@ -33,7 +33,7 @@
 /// Perform interpolation between centre -> shifted or vice-versa
 /*!
   Interpolate using 4th-order staggered formula
-  
+
   @param[in] s  Input stencil. mm -> -3/2, m -> -1/2, p -> +1/2, pp -> +3/2
 */
 BoutReal interp(const stencil &s)
@@ -41,91 +41,107 @@ BoutReal interp(const stencil &s)
   return ( 9.*(s.m + s.p) - s.mm - s.pp ) / 16.;
 }
 
+BoutReal extrap_left(const stencil &s)
+{
+  return (3*s.p - s.pp) / 2.;
+}
+
+BoutReal extrap_right(const stencil &s)
+{
+  return (3*s.m - s.mm) / 2.;
+}
+
 /*!
   Interpolate between different cell locations
-  
+
   NOTE: This requires communication
 
   @param[in]   var  Input variable
   @param[in]   loc  Location of output values
 */
-const Field3D interp_to(const Field3D &var, CELL_LOC loc)
+const Field3D interp_to(const Field3D &var1, CELL_LOC loc)
 {
-  if(mesh->StaggerGrids && (var.getLocation() != loc)) {
+  if(mesh->StaggerGrids && (var1.getLocation() != loc)) {
 
     // Staggered grids enabled, and need to perform interpolation
-    TRACE("Interpolating %s -> %s", strLocation(var.getLocation()), strLocation(loc));
+    TRACE("Interpolating %s -> %s", strLocation(var1.getLocation()), strLocation(loc));
+
+
+    Field3D var = var1;
+    mesh->communicate(var);
 
     Field3D result;
 
     result = var; // NOTE: This is just for boundaries. FIX!
     result.allocate();
-    
+
     if((var.getLocation() == CELL_CENTRE) || (loc == CELL_CENTRE)) {
       // Going between centred and shifted
-      
+
       bindex bx;
       stencil s;
-      CELL_LOC dir; 
-      
+      CELL_LOC dir;
+
       // Get the non-centre location for interpolation direction
       dir = (loc == CELL_CENTRE) ? var.getLocation() : loc;
 
-      switch(dir) {
-      case CELL_XLOW: {
-	start_index(&bx, RGN_NOX);
-	do {
-	  var.setXStencil(s, bx, loc);
-	  result(bx.jx,bx.jy,bx.jz) = interp(s);
-	}while(next_index3(&bx));
-	break;
-	// Need to communicate in X
-      }
-      case CELL_YLOW: {
-	start_index(&bx, RGN_NOY);
-	do {
-	  var.setYStencil(s, bx, loc);
-	  result(bx.jx,bx.jy,bx.jz) = interp(s);
-	}while(next_index3(&bx));
-	break;
-	// Need to communicate in Y
-      }
-      case CELL_ZLOW: {
-	start_index(&bx, RGN_NOZ);
-	do {
-	  var.setZStencil(s, bx, loc);
-	  result(bx.jx,bx.jy,bx.jz) = interp(s);
-	}while(next_index3(&bx));
-	break;
-      }
-      default: {
-	// This should never happen
-	throw BoutException("Don't know what to do");
-      }
+        switch(dir) {
+        case CELL_XLOW: {
+	        start_index(&bx, RGN_NOX);
+	        do {
+	          var.setXStencil(s, bx, loc);
+	          result(bx.jx,bx.jy,bx.jz) = interp(s);
+	        }while(next_index3(&bx));
+            mesh->communicate(result);
+	        break;
+        }
+        case CELL_YLOW: {
+            start_index(&bx, RGN_NOY);
+	        do {
+	          var.setYStencil(s, bx, loc);
+              if (bx.jy < mesh->ystart+2){
+                result(bx.jx,bx.jy,bx.jz) = extrap_left(s);
+              }
+              else if (bx.jy > mesh->yend-2){
+                result(bx.jx,bx.jy,bx.jz) = extrap_right(s);
+              }
+              else{
+                result(bx.jx,bx.jy,bx.jz) = interp(s);
+              }
+	        }while(next_index3(&bx));
+
+
+            mesh->communicate(result);
+	        break;
+        }
+        case CELL_ZLOW: {
+	       start_index(&bx, RGN_NOZ);
+	       do {
+	         var.setZStencil(s, bx, loc);
+	         result(bx.jx,bx.jy,bx.jz) = interp(s);
+	        }while(next_index3(&bx));
+	       break;
+       }
+        default: {
+	       // This should never happen
+	       throw BoutException("Don't know what to do");
+        }
       };
-      
-      if(dir != CELL_ZLOW) {
-	// COMMUNICATION
-	
-	mesh->communicate(result);
+    }
 
-	// BOUNDARIES
-
-      }
-
-    }else {
+    else {
       // Shifted -> shifted
       // For now, shift to centre then to shifted
-      
+
       result = interp_to( interp_to(var, CELL_CENTRE) , loc);
     }
     result.setLocation(loc);
 
     return result;
   }
-  
+
   // Nothing to do - just return unchanged
-  return var;
+  return var1;
 }
 
 const Field2D interp_to(const Field2D &var, CELL_LOC UNUSED(loc)) {
