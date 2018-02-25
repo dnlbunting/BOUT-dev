@@ -368,22 +368,10 @@ BoutReal VDDX_U2_stag(stencil &v, stencil &f) {
 }
 
 BoutReal VDDX_U4_stag(stencil &v, stencil &f) {
-  BoutReal result;
-
-  if (v.p>0 && v.m>0) {
-    // Extrapolate v to centre from below, use 2nd order backward difference on f
-    result = (1.5*v.m - .5*v.mm) * (4.*f.p - 12.*f.m + 2.*f.mm + 6.*f.c)/12.;
-  }
-  else if (v.p<0 && v.m<0) {
-    // Extrapolate v to centre from above, use 2nd order forward difference on f
-    result = (1.5*v.p - .5*v.pp) * (-4.*f.m + 12.*f.p - 2.*f.pp - 6.*f.c)/12.;
-  }
-  else {
-    // Velocity changes sign, hence is almost zero: use centred interpolation/differencing
-    result = .25 * (v.p + v.m) * (f.p - f.m);
-  }
-
-  return result;
+  // 4th order lagrange interpolate v to the centre point
+  BoutReal vc = ( 9.*(v.m + v.p) - v.mm - v.pp ) / 16.;
+  return vc >= 0.0 ? vc*(4.*f.p - 12.*f.m + 2.*f.mm + 6.*f.c)/12.
+    : vc*(-4.*f.m + 12.*f.p - 2.*f.pp - 6.*f.c)/12.;
 }
 
 
