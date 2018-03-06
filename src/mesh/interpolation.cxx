@@ -95,6 +95,8 @@ const Field3D interp_to(const Field3D &var1, CELL_LOC loc)
             mesh->communicate(result);
 	        break;
         }
+
+
         case CELL_YLOW: {
             start_index(&bx, RGN_NOY);
 	        do {
@@ -109,6 +111,10 @@ const Field3D interp_to(const Field3D &var1, CELL_LOC loc)
                 result(bx.jx,bx.jy,bx.jz) = interp(s);
               }
 	        }while(next_index3(&bx));
+
+          // NASTY HACK TO EXTRAPOLATE A LITTLE BIT OF THE BOUNDARY
+          result(0,mesh->ystart-1,0) = extrap_left(stencil(nan(""), nan(""), var(0,mesh->ystart,0), nan(""), var(0,mesh->ystart+1,0)));
+          rresult(0,mesh->yend+1,0) = extrap_right(stencil(nan(""), var(0,mesh->yend,0), nan(""), var(0,mesh->yend-1,0), nan("")));
 
 
             mesh->communicate(result);
