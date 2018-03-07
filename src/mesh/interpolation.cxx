@@ -114,7 +114,7 @@ const Field3D interp_to(const Field3D &var1, CELL_LOC loc)
 
           // NASTY HACK TO EXTRAPOLATE A LITTLE BIT OF THE BOUNDARY
           result(0,mesh->ystart-1,0) = extrap_left(stencil(nan(""), nan(""), var(0,mesh->ystart,0), nan(""), var(0,mesh->ystart+1,0)));
-          rresult(0,mesh->yend+1,0) = extrap_right(stencil(nan(""), var(0,mesh->yend,0), nan(""), var(0,mesh->yend-1,0), nan("")));
+          result(0,mesh->yend+1,0) = extrap_right(stencil(nan(""), var(0,mesh->yend,0), nan(""), var(0,mesh->yend-1,0), nan("")));
 
 
             mesh->communicate(result);
