@@ -2,7 +2,7 @@
 # inputs and outputs easier. Creates a tree of maps,
 # inspired by approach used in OMFIT
 #
-# 
+#
 
 import os
 import glob
@@ -14,7 +14,7 @@ try:
 except ImportError:
     print("ERROR: boututils.datafile.DataFile couldn't be loaded")
     raise
-    
+
 class BoutOptions(object):
     """
     This class represents a tree structure.
@@ -23,23 +23,23 @@ class BoutOptions(object):
 
     Example
     -------
-    
+
     optRoot = BoutOptions()  # Create a root
-    
-    # Specify value of a key in a section "test" 
+
+    # Specify value of a key in a section "test"
     # If the section does not exist then it is created
-    
+
     optRoot.getSection("test")["key"] = value
-    
+
     # Get the value of a key in a section "test"
     # If the section does not exist then a KeyError is raised
-    
+
     print optRoot["test"]["key"]
-    
+
     # To pretty print the options
-    
+
     print optRoot
-    
+
     """
     def __init__(self, name="root", parent=None):
         self._sections = {}
@@ -53,14 +53,14 @@ class BoutOptions(object):
         does not exist then it is created
         """
         name = name.lower()
-        
+
         if name in self._sections:
             return self._sections[name]
         else:
             newsection = BoutOptions(name, self)
             self._sections[name] = newsection
             return newsection
-        
+
     def __getitem__(self, key):
         """
         First check if it's a section, then a value
@@ -68,7 +68,7 @@ class BoutOptions(object):
         key = key.lower()
         if key in self._sections:
             return self._sections[key]
-            
+
         if key not in self._keys:
             raise KeyError("Key '%s' not in section '%s'" % (key, self.path()))
         return self._keys[key]
@@ -86,7 +86,7 @@ class BoutOptions(object):
         Returns the path of this section,
         joining together names of parents
         """
-        
+
         if self._parent:
             return self._parent.path() + ":" + self._name
         return self._name
@@ -95,7 +95,7 @@ class BoutOptions(object):
         """
         Returns all keys, including sections and values
         """
-        return self._sections.keys() + self._keys.keys()
+        return list(self._sections.keys()) + list(self._keys.keys())
 
     def sections(self):
         """
@@ -126,10 +126,10 @@ class BoutOptions(object):
         Print a pretty version of the options tree
         """
         text = self._name + "\n"
-        
+
         for k in self._keys:
             text += indent + " |- " + k + " = " + str(self._keys[k]) + "\n"
-        
+
         for s in self._sections:
             text += indent + " |- " + self._sections[s].__str__(indent+" |  ")
         return text
@@ -138,19 +138,19 @@ class BoutOptionsFile(BoutOptions):
     """
     Parses a BOUT.inp configuration file, producing
     a tree of BoutOptions.
-    
+
     Slight differences from ConfigParser, including allowing
     values before the first section header.
 
     Example
     -------
-    
+
     opts = BoutOptionsFile("BOUT.inp")
-    
+
     print opts   # Print all options in a tree
-    
+
     opts["All"]["scale"] # Value "scale" in section "All"
-    
+
     """
     def __init__(self, filename, name="root"):
         BoutOptions.__init__(self, name)
@@ -166,7 +166,7 @@ class BoutOptionsFile(BoutOptions):
                 startpos = line.find(";")
                 if startpos != -1:
                     line = line[:startpos]
-                
+
                 # Check section headers
                 startpos = line.find("[")
                 endpos = line.find("]")
@@ -175,7 +175,7 @@ class BoutOptionsFile(BoutOptions):
                     if endpos == -1:
                         raise SyntaxError("Missing ']' on line %d" % (linenr,))
                     line = line[(startpos+1):endpos].strip()
-                    
+
                     section = self
                     while True:
                         scorepos = line.find(":")
@@ -187,7 +187,7 @@ class BoutOptionsFile(BoutOptions):
                     section = section.getSection(line)
                 else:
                     # A key=value pair
-                    
+
                     eqpos = line.find("=")
                     if eqpos == -1:
                         # No '=', so just set to true
@@ -204,27 +204,27 @@ class BoutOptionsFile(BoutOptions):
                             except ValueError:
                                 # Leave as a string
                                 pass
-                        
+
                         section[line[:eqpos].strip()] = value
-                    
-                        
-            
+
+
+
 class BoutOutputs(object):
     """
     Emulates a map class, represents the contents of a BOUT++
     dmp files. Does not allow writing, only reading of data.
     Currently there is no cache, so each time a variable
     is read it is collected.
-    
+
     Example
     -------
 
     d = BoutOutputs(".")  # Current directory
-    
+
     d.keys()     # List all valid keys
-    
+
     d["ne"] # Read "ne" from data files
-    
+
     """
     def __init__(self, path=".", prefix="BOUT.dmp"):
         """
@@ -232,7 +232,7 @@ class BoutOutputs(object):
         """
         self._path = path
         self._prefix = prefix
-        
+
         # Label for this data
         self.label = path
 
@@ -240,27 +240,27 @@ class BoutOutputs(object):
         file_list = glob.glob(os.path.join(path, prefix+"*.nc"))
         if len(file_list) == 0:
             raise ValueError("ERROR: No data files found")
-        
+
         # Available variables
         self.varNames = []
-        
+
         with DataFile(file_list[0]) as f:
             # Get variable names
             self.varNames = f.keys()
-        
+
     def keys(self):
         """
         Return a list of available variable names
         """
         return self.varNames
-        
+
     def __len__(self):
         return len(self.varNames)
-            
+
     def __getitem__(self, name):
         """
         Reads a variable using collect.
-        
+
         """
 
         # Collect the data from the repository
@@ -274,7 +274,7 @@ class BoutOutputs(object):
         """
         for k in self.varNames:
             yield k
-            
+
     def __str__(self, indent=""):
         """
         Print a pretty version of the tree
@@ -282,9 +282,9 @@ class BoutOutputs(object):
         text = ""
         for k in self.varNames:
             text += indent+k+"\n"
-        
+
         return text
-    
+
 
 def BoutData(path=".", prefix="BOUT.dmp"):
     """
@@ -292,32 +292,32 @@ def BoutData(path=".", prefix="BOUT.dmp"):
     output directory. Does not allow writing, only reading of data.
     Currently there is no cache, so each time a variable
     is read it is collected.
-    
+
     Example
     -------
 
     d = BoutData(".")  # Current directory
-    
+
     d.keys()     # List all valid keys
 
     print d["options"]  # Prints tree of options
 
     d["options"]["nout"]   # Value of nout in BOUT.inp file
-    
+
     print d["outputs"]    # Print available outputs
 
     d["outputs"]["ne"] # Read "ne" from data files
-    
+
     """
-    
+
     data = {} # Map for the result
-    
+
     data["path"] = path
-    
+
     # Options from BOUT.inp file
     data["options"] = BoutOptionsFile(os.path.join(path, "BOUT.inp"), name="options")
-    
+
     # Output from .dmp.* files
     data["outputs"] = BoutOutputs(path)
-    
+
     return data
